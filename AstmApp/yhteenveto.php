@@ -116,7 +116,7 @@ while	($row=$kyselyPEF->fetch()){
 
         if($row['userSex'] == "n") {
             if($ka > $goodN) {
-                //echo($ka);
+                
                 echo '<span style="color:green; font-weight: bold;">'.ROUND($ka, 0).'</span>';
             }elseif($ka >= $badN && $ka <= $goodN) {
                 //echo($ka);
