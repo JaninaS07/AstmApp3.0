@@ -99,7 +99,7 @@ while	($row=$kyselyPEF->fetch()){
             //echo($row['2nd']. " l/min");
             echo(ROUND($pef_euN, 0));
         }*/
-        if($row['userSex'] == "m") {
+        if($row['userSex'] == "m") { 
             if($ka > $goodM) {
                 //echo($ka);
                 echo '<span style="color:green; font-weight: bold;">'.ROUND($ka, 0).'</span>';
