@@ -1,7 +1,7 @@
 /* Mobile first */
 
 /* The navigation bar */
-#navbar {
+#navbar { 
   display:inline-block;
   overflow: hidden;
   background-color: #1167B1;
