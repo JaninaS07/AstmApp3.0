@@ -14,7 +14,7 @@
   z-index: 1;
 }
 
-.justified{ 
+.justified{
   text-align: justify;
 }
 
@@ -258,16 +258,19 @@ select, select option {
 }
 
 tr{
-  background-color: rgba(123, 136, 235, 0.897);
+  background-color: rgba(248, 120, 65, 0.815);
   border: 1px solid black;
+  padding: 1px;
 }
 td{
-  background-color:rgb(214, 215, 226);
+  background-color:rgb(237, 237, 246);
   border: 1px solid black;
   vertical-align: top;
   text-align: left;
+  padding: 2px;
   
 }
+
 
 ul {
   margin: 5px;

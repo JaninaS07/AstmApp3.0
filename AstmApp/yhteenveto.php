@@ -10,41 +10,6 @@ $kyselyYhteenveto->execute($dataYhteenveto);
 $tulosYhteenveto=$kyselyYhteenveto->fetch();
 $currentUserID=$tulosYhteenveto[0];
 ?>
-
-<?php
-//kysely ja taulukon tulostus PEF-mittauksille
-$dataPEF['userID'] = $currentUserID;
-$sqlPEF = "SELECT medsInfo, 1st, 2nd, 3rd, timeOfMeasurement FROM `peakFlow`
-WHERE userID = :userID ORDER BY timeOfMeasurement DESC LIMIT 5";
-$kyselyPEF=$DBH->prepare($sqlPEF);
-$kyselyPEF->execute($dataPEF);				
-
-echo ("<p><h3>Edelliset PEF-puhallusarvot:</h3></p>");
-echo ("<p><h5>Puhallusarvot näytetään suuruusjärjestyksessä.</h5></p>");
-
-echo("<table>
-    <tr>
-        <th colspan=\"3\">Mittaukset</th>
-        <th>Lääkitys</th>
-        <th>pvm & klo</th>
-        <th>Keskiarvo</th>
-        <th>Paras arvo</th>
-    </tr>");
-while	($row=$kyselyPEF->fetch()){	
-        $formatted_datetime = date("d.m.Y, H:i", strtotime($row['timeOfMeasurement']));
-        $ka=($row['1st']+$row['2nd']+$row['3rd'])/3;
-        echo("<tr>
-        <td align=\"right\">".$row['1st']."</td>
-        <td align=\"right\">".$row['2nd']."</td>
-        <td align=\"right\">".$row['3rd']."</td>
-        <td>".$row['medsInfo']."</td>
-        <td align=\"right\">".$formatted_datetime."</td>
-        <td>".ROUND($ka,0)."</td>
-        <td>".$row['1st']."</td>");
-    }
-echo("</table><br/>");
-
-?>
 <?php
 //kysely ja laskukaava viitearvoille
 $dataViite['userID'] = $currentUserID;
@@ -52,7 +17,7 @@ $sqlViite = "SELECT userSex, userHeight, userDOB FROM `users` WHERE userID = :us
 $kyselyViite=$DBH->prepare($sqlViite);
 $kyselyViite->execute($dataViite);				
 
-echo ("<h4>PEF-mittauksen viitearvo (=tavoitetaso) sinulle on:<br/>");
+echo ("<h4>PEF-mittauksen tavoitearvosi on:<br/>");
 
 //echo("<table>
    // <tr>
@@ -84,13 +49,92 @@ while	($row=$kyselyViite->fetch()){
             //echo $viitearvo;
         }
         //nämä kysymysmerkkiin pop-upiin?
-        echo("Viitearvot määritellään iän, sukupuolen ja pituuden perusteella.<br/>");
-        echo("Viitearvot perustuvat EU standardiin: EU EN-13826 [l/min]");
+        //echo("Viitearvot määritellään iän, sukupuolen ja pituuden perusteella.<br/>");
+        //echo("Viitearvot perustuvat EU standardiin: EU EN-13826 [l/min]");
         // vuorokausivaihtelu: 100 x (suurin PEF- pienin PEF) / 1/2x (suurin PEF+ pienin PEF)
         // värikoodit: jos yli 15% huonompi kuin viitearvo -> keltainen PEF-tulos?
 
     }
 //echo("</table><br/>");
+?>
+<?php
+//kysely ja taulukon tulostus PEF-mittauksille
+
+$dataPEF['userID'] = $currentUserID;
+$sqlPEF = "SELECT medsInfo, 1st, 2nd, 3rd, timeOfMeasurement, userSex FROM `peakFlow`, `users` 
+WHERE users.userID = peakFlow.userID AND users.userID = :userID ORDER BY timeOfMeasurement DESC LIMIT 10";
+$kyselyPEF=$DBH->prepare($sqlPEF);
+$kyselyPEF->execute($dataPEF);				
+
+echo ("<p><h3>Edelliset PEF-puhallusarvot:</h3></p>");
+echo ("<p><h5>Puhallusarvot näytetään suuruusjärjestyksessä.</h5></p>");
+
+echo("<table>
+    <tr>
+        <th>ajankohta</th>
+        <th>lääkitys</th>
+        <th colspan=\"3\">mittaukset</th>
+        <th>paras arvo</th>
+        <th>keskiarvo</th>
+    </tr>");
+        // lasketaan %raja-arvot mittausten keskiarvolle --> keskiarvon väri tulosten mukaan
+while	($row=$kyselyPEF->fetch()){	
+        $formatted_datetime = date("d.m.Y, H:i", strtotime($row['timeOfMeasurement']));
+        $ka=($row['1st']+$row['2nd']+$row['3rd'])/3;
+        $goodN=$pef_euN*0.85;
+        $mediumN=$pef_euN*0.70;
+        $badN=$pef_euN*0.50;
+        $goodM=$pef_euM*0.85;
+        $mediumM=$pef_euM*0.70;
+        $badM=$pef_euM*0.50;
+        echo("<tr>
+        <td align=\"right\">".$formatted_datetime."</td>
+        <td>".$row['medsInfo']."</td>
+        <td align=\"right\">".$row['1st']."</td>
+        <td align=\"right\">".$row['2nd']."</td>
+        <td align=\"right\">".$row['3rd']."</td>
+        <td>".$row['1st']."</td>");
+        echo("<td>");
+       /*if($row['1st'] > $row['2nd']) {
+            //echo($row['2nd']. " l/min");
+            echo(ROUND($pef_euN, 0));
+        }*/
+        if($row['userSex'] == "m") {
+            if($ka > $goodM) {
+                //echo($ka);
+                echo '<span style="color:green; font-weight: bold;">'.ROUND($ka, 0).'</span>';
+            }elseif($ka >= $badM && $ka <= $goodM) {
+                //echo($ka);
+                echo '<span style="color:DarkOrange;  font-weight: bold;">'.ROUND($ka, 0).'</span>';
+            }elseif($ka < $badM) {
+                //echo($ka);
+                echo '<span style="color:red;  font-weight: bold;">'.ROUND($ka, 0).'</span>';
+            }else {
+                echo(ROUND($ka, 0));
+            }
+        }
+
+        if($row['userSex'] == "n") {
+            if($ka > $goodN) {
+                //echo($ka);
+                echo '<span style="color:green; font-weight: bold;">'.ROUND($ka, 0).'</span>';
+            }elseif($ka >= $badN && $ka <= $goodN) {
+                //echo($ka);
+                echo '<span style="color:DarkOrange;  font-weight: bold;">'.ROUND($ka, 0).'</span>';
+            }elseif($ka < $badN) {
+                //echo($ka);
+                echo '<span style="color:red;  font-weight: bold;">'.ROUND($ka, 0).'</span>';
+            }else {
+                echo(ROUND($ka, 0));
+            }
+        }
+
+    
+        echo("</td></tr>");
+
+    }
+echo("</table><br/>");
+
 ?>
 
 <?php
